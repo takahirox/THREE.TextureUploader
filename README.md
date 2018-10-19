@@ -45,6 +45,36 @@ Less-blocking Texture uploader for Three.js
 <script src="js/loaders/GLTFLoader.js"></script>
 
 <script>
+// Override TextureLoader to use ImageBitmapLoader
+THREE.TextureLoader.prototype.load = function ( url, onLoad, onProgress, onError ) {
+
+  var texture = new THREE.Texture();
+
+  var loader = new THREE.ImageBitmapLoader( this.manager );
+  loader.setCrossOrigin( this.crossOrigin );
+  loader.setPath( this.path );
+
+  loader.load( url, function ( image ) {
+
+    texture.image = image;
+
+    var isJPEG = url.search( /\.jpe?g$/i ) > 0 || url.search( /^data\:image\/jpeg/ ) === 0;
+
+    texture.format = isJPEG ? THREE.RGBFormat : THREE.RGBAFormat
+    texture.needsUpdate = true;
+
+    if ( onLoad !== undefined ) {
+
+      onLoad( texture );
+
+    }
+
+  }, onProgress, onError );
+
+  return texture;
+
+};
+
 var container = document.createElement( 'div' );
 document.body.appendChild( container );
 
