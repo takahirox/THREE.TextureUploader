@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - glTF loader</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			#info a {
+				color: #75ddc1;
+				font-weight: bold;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="info">
+			<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - GLTFLoader<br />
+			Battle Damaged Sci-fi Helmet by
+			<a href="https://sketchfab.com/theblueturtle_" target="_blank" rel="noopener">theblueturtle_</a><br />
+		</div>
+
+		<script src="https://raw.githack.com/mrdoob/three.js/r97/build/three.js"></script>
+		<script src="js/TextureUploader.js"></script>
+
+		<script src="https://raw.githack.com/mrdoob/three.js/r97/examples/js/controls/OrbitControls.js"></script>
+		<script src="https://raw.githack.com/mrdoob/three.js/r97/examples/js/loaders/GLTFLoader.js"></script>
+
+		<script src="https://raw.githack.com/mrdoob/three.js/r97/examples/js/WebGL.js"></script>
+		<script src="https://raw.githack.com/mrdoob/three.js/r97/examples/js/libs/stats.min.js"></script>
+
+		<script>
+
+			if ( WEBGL.isWebGLAvailable() === false ) {
+
+				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+			}
+
+			var container, stats, controls;
+			var camera, scene, renderer, light;
+
+			var useImageBitmap = false;
+
+			var uploader;
+			var uploadMode = 'one_by_one';
+			var uploadStartReady = false;
+			var uploadInterval = 5;
+			var chunkSize = 256;
+			var gltfDirectory = 'glTF';
+
+			var query = ( location.href + '?' ).split( '?' )[ 1 ];
+			var queryArray = query.split( '&' );
+
+			while ( queryArray.length > 0 ) {
+
+				var str = queryArray.shift();
+
+				if ( str === '' ) continue;
+
+				var array = str.split( '=' );
+				var key = array[ 0 ];
+				var value = array[ 1 ];
+
+				switch ( key.toLowerCase() ) {
+
+					case 'imagebitmap':
+
+						useImageBitmap = value.toLowerCase() === 'on' ? true : false;
+						break;
+
+					case 'mode':
+
+						uploadMode = value;
+						break;
+
+					case 'interval':
+
+						uploadInterval = parseInt( value );
+						break;
+
+					case 'chunksize':
+
+						chunkSize = parseInt( value );
+						break;
+
+					case 'texture':
+
+						switch( value.toLowerCase() ) {
+
+							case 'huge':
+
+								gltfDirectory = 'glTF-huge';
+								break;
+
+							case 'large':
+
+								gltfDirectory = 'glTF-large';
+								break;
+
+							case 'regular':
+							default:
+
+								gltfDirectory = 'glTF';
+								break;
+
+						}
+
+						break;
+
+					default:
+
+						console.warn( 'Unknown Option Key: ' + key );
+						break;
+
+				}
+
+			}
+
+			console.log( 'Option ImageBitmap: ' + useImageBitmap );
+			console.log( 'Option Mode: ' + uploadMode );
+			console.log( 'Option Interval: ' + uploadInterval );
+			console.log( 'Option ChunkSize: ' + chunkSize );
+			console.log( 'Option Texture: ' + ( gltfDirectory === 'glTF' ? 'regular' : gltfDirectory.split( '-' )[ 1 ] ) );
+
+			if ( useImageBitmap ) {
+
+				THREE.TextureLoader.prototype.load = function ( url, onLoad, onProgress, onError ) {
+
+					var texture = new THREE.Texture();
+
+					var loader = new THREE.ImageBitmapLoader( this.manager );
+					loader.setCrossOrigin( this.crossOrigin );
+					loader.setPath( this.path );
+
+					loader.load( url, function ( image ) {
+
+						texture.image = image;
+
+						var isJPEG = url.search( /\.jpe?g$/i ) > 0 || url.search( /^data\:image\/jpeg/ ) === 0;
+
+						texture.format = isJPEG ? THREE.RGBFormat : THREE.RGBAFormat
+						texture.needsUpdate = true;
+
+						if ( onLoad !== undefined ) {
+
+							onLoad( texture );
+
+						}
+
+					}, onProgress, onError );
+
+					return texture;
+
+				};
+
+			}
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				scene = new THREE.Scene();
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 20 );
+				camera.position.set( -1.8, 0.9, 2.7 );
+
+				controls = new THREE.OrbitControls( camera );
+				controls.target.set( 0, -0.2, -0.2 );
+				controls.update();
+
+				light = new THREE.HemisphereLight( 0xbbbbff, 0x444422 );
+				light.position.set( 0, 1, 0 );
+				scene.add( light );
+
+				var plane = new THREE.Mesh(
+					new THREE.PlaneBufferGeometry( 3, 3 ),
+					new THREE.MeshBasicMaterial( { color: 0xffffff } )
+				);
+
+				plane.rotation.x = - Math.PI * 90 / 180;
+				plane.position.y = - 1;
+
+				scene.add( plane );
+
+				new Promise( function ( resolve, reject ) {
+
+					// envmap
+
+					var path = 'textures/cube/Bridge2/';
+					var format = '.jpg';
+
+					console.log( 'envMap load start.' );
+
+					envMap = new THREE.CubeTextureLoader().load( [
+
+						path + 'posx' + format, path + 'negx' + format,
+						path + 'posy' + format, path + 'negy' + format,
+						path + 'posz' + format, path + 'negz' + format
+
+					], function () {
+
+						console.log( 'envMap load end' );
+						resolve();
+
+					}, undefined, reject );
+
+					scene.background = envMap;
+
+				} ).then( function () {
+
+					// model
+
+					return new Promise( function ( resolve, reject ) {
+
+						setTimeout( function () {
+
+							console.log( 'gltf load start.' );
+
+							new THREE.GLTFLoader().load( 'models/gltf/DamagedHelmet/' + gltfDirectory + '/DamagedHelmet.gltf', function ( gltf ) {
+
+								gltf.scene.traverse( function ( child ) {
+
+									if ( child.isMesh ) {
+
+										child.material.envMap = envMap;
+
+									}
+
+								} );
+
+								console.log( 'gltf load end.' );
+								resolve( gltf );
+
+							}, undefined, reject );
+
+						}, 2000 );
+
+					} );
+
+				} ).then( function ( gltf ) {
+
+					return new Promise( function ( resolve ) {
+
+						setTimeout( function () {
+
+							console.log( 'gltf scene is added to uploader.' );
+							uploader.add( gltf.scene );
+							resolve( gltf );
+
+						}, 2000 );
+
+					} );
+
+				} ).then( function ( gltf ) {
+
+					return new Promise( function ( resolve ) {
+
+						setTimeout( function () {
+
+							console.log( 'gltf is added to the scene.' );
+							scene.add( gltf.scene );
+							resolve();
+
+						}, 2000 );
+
+					} );
+
+				} ).then( function () {
+
+					return new Promise( function ( resolve ) {
+
+						setTimeout( function () {
+
+							console.log( 'textures upload start.' );
+							uploadStartReady = true;
+							resolve();
+
+						}, 2000 );
+
+					} );
+
+				} ).catch( function ( error ) {
+
+					console.error( error );
+
+				} );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.gammaOutput = true;
+				container.appendChild( renderer.domElement );
+
+				uploader = new THREE.TextureUploader( renderer )
+					.setChunkSize( chunkSize, chunkSize )
+					.setInterval( uploadInterval )
+					.setMode( uploadMode )
+					.setOnTextureUpload( onTextureUpload );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				// stats
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onTextureUpload( texture ) {
+
+				console.log( 'Upload done.', texture );
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				scene.rotation.y += 0.01;
+
+				if ( uploadStartReady ) uploader.update();
+
+				renderer.render( scene, camera );
+
+				stats.update();
+
+			}
+
+		</script>
+
+	</body>
+</html>
