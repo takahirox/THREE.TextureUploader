@@ -40,6 +40,7 @@
 
 		<script src="https://raw.githack.com/mrdoob/three.js/r97/examples/js/controls/OrbitControls.js"></script>
 		<script src="https://raw.githack.com/mrdoob/three.js/r97/examples/js/loaders/GLTFLoader.js"></script>
+		<script src="https://raw.githack.com/mrdoob/three.js/r97/examples/js/loaders/DDSLoader.js"></script>
 
 		<script src="https://raw.githack.com/mrdoob/three.js/r97/examples/js/WebGL.js"></script>
 		<script src="https://raw.githack.com/mrdoob/three.js/r97/examples/js/libs/stats.min.js"></script>
@@ -103,14 +104,19 @@
 
 						switch( value.toLowerCase() ) {
 
+							case 'large':
+
+								gltfDirectory = 'glTF-large';
+								break;
+
 							case 'huge':
 
 								gltfDirectory = 'glTF-huge';
 								break;
 
-							case 'large':
+							case 'dds':
 
-								gltfDirectory = 'glTF-large';
+								gltfDirectory = 'glTF-dds';
 								break;
 
 							case 'regular':
