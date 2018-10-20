@@ -18,6 +18,7 @@ Less-blocking Texture uploader for Three.js
 - [ImageBitmapLoader](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=at_the_same_time&imagebitmap=on)
 - [ImageBitmapLoader + One_by_one](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=one_by_one&imagebitmap=on&interval=30)
 - [ImageBitmapLoader + Partial](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial&imagebitmap=on&chunksize=512&interval=3)
+- [ImageBitmapLoader + Partial(No interim)](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial_no_interim&imagebitmap=on&chunksize=512&interval=3)
 
 ### Large textures (five 4096x4096 jpg textures)
 
@@ -27,6 +28,7 @@ Less-blocking Texture uploader for Three.js
 - [ImageBitmapLoader](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=at_the_same_time&imagebitmap=on&texture=large)
 - [ImageBitmapLoader + One_by_one](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=one_by_one&imagebitmap=on&interval=30&texture=large)
 - [ImageBitmapLoader + Partial](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial&imagebitmap=on&chunksize=512&interval=3&texture=large)
+- [ImageBitmapLoader + Partial(No interim)](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial_no_interim&imagebitmap=on&chunksize=512&interval=3&texture=large)
 
 ### Huge textures (five 8192x8192 jpg textures)
 
@@ -36,6 +38,7 @@ Less-blocking Texture uploader for Three.js
 - [ImageBitmapLoader](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=at_the_same_time&imagebitmap=on&texture=huge)
 - [ImageBitmapLoader + One_by_one](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=one_by_one&imagebitmap=on&interval=30&texture=huge)
 - [ImageBitmapLoader + Partial](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial&imagebitmap=on&chunksize=512&interval=3&texture=huge)
+- [ImageBitmapLoader + Partial(No interim)](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial_no_interim&imagebitmap=on&chunksize=512&interval=3&texture=huge)
 
 ## How to use
 
