@@ -231,52 +231,56 @@
 
 			if ( this.textureMap.has( texture ) ) return;
 
-			if ( texture.isCubeTexture === true ) {
+			if ( this.mode === 'partial' || this.mode === 'partial_no_interim' ) {
 
-				console.warn( 'THREE.TextureUploader: CubeTexture is not supported yet.', texture );
-				return;
+				if ( texture.isCubeTexture === true ) {
 
-			}
+					console.warn( 'THREE.TextureUploader: partial mode does not support CubeTexture.', texture );
+					return;
 
-			if ( texture.isCompressedTexture === true ) {
+				}
 
-				console.warn( 'THREE.TextureUploader: CompressedTexture is not supported yet.', texture );
-				return;
+				if ( texture.isCompressedTexture === true ) {
 
-			}
+					console.warn( 'THREE.TextureUploader: partial mode does not support CompressedTexture.', texture );
+					return;
 
-			if ( texture.isDataTexture === true ) {
+				}
 
-				console.warn( 'THREE.TextureUploader: DataTexture is not supported yet.', texture );
-				return;
+				if ( texture.isDataTexture === true ) {
 
-			}
+					console.warn( 'THREE.TextureUploader: partial mode does not support DataTexture.', texture );
+					return;
 
-			if ( texture.isDataTexture3D === true ) {
+				}
 
-				console.warn( 'THREE.TextureUploader: DataTexture3D is not supported yet.', texture );
-				return;
+				if ( texture.isDataTexture3D === true ) {
 
-			}
+					console.warn( 'THREE.TextureUploader: partial mode does not support DataTexture3D.', texture );
+					return;
 
-			if ( texture.mipmaps.length > 0 ) {
+				}
 
-				console.warn( 'THREE.TextureUploader: Texture whose .mipmaps.length > 0 is not supported yet.', texture );
-				return;
+				if ( texture.mipmaps.length > 0 ) {
 
-			}
+					console.warn( 'THREE.TextureUploader: partial mode does not support Texture whose .mipmaps.length > 0.', texture );
+					return;
 
-			if ( texture.image === undefined || texture.image === null ) {
+				}
 
-				console.warn( 'THREE.TextureUploader: Texture whose .image is not set is not supported yet.', texture );
-				return;
+				if ( texture.image === undefined || texture.image === null ) {
 
-			}
+					console.warn( 'THREE.TextureUploader: partial mode does not support Texture whose .image is not set.', texture );
+					return;
 
-			if ( ! this.isPowerOfTwoRect( texture.image.width, texture.image.height ) ) {
+				}
 
-				console.warn( 'THREE.TextureUploader: Texture whose .image is not power-of-two is not supported yet.', texture );
-				return;
+				if ( ! this.isPowerOfTwoRect( texture.image.width, texture.image.height ) ) {
+
+					console.warn( 'THREE.TextureUploader: partial mode does not support Texture whose .image is not power-of-two.', texture );
+					return;
+
+				}
 
 			}
 
