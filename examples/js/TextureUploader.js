@@ -55,9 +55,9 @@
 
 			}
 
-			if ( mode !== 'one_by_one' && mode !== 'at_the_same_time' && mode !== 'partial' ) {
+			if ( mode !== 'one_by_one' && mode !== 'at_the_same_time' && mode !== 'partial' && mode !== 'partial_no_interim' ) {
 
-				console.warn( 'THREE.TextureUploader: mode must be one of one_by_one, at_the_same_time, or partial.' );
+				console.warn( 'THREE.TextureUploader: mode must be one of one_by_one, at_the_same_time, partial, or partial_no_interim.' );
 				return this;
 
 			}
@@ -139,14 +139,15 @@
 
 			switch ( this.mode ) {
 
+				case 'partial':
+				case 'partial_no_interim':
+
+					this.uploadChunk();
+					break;
+
 				case 'at_the_same_time':
 
 					this.uploadAll();
-					break;
-
-				case 'partial':
-
-					this.uploadChunk();
 					break;
 
 				case 'one_by_one':
@@ -288,7 +289,7 @@
 
 			this.textureMap.set( texture, true );
 
-			if ( this.mode === 'partial' ) {
+			if ( this.mode === 'partial' || this.mode === 'partial_no_interim' ) {
 
 				this.initializeTexture( texture );
 				this.createChunks( texture );
@@ -348,7 +349,13 @@
 
 			if ( dstTexture.uploadedChunks === dstTexture.chunkNums ) {
 
-				this.switchWebGLTextures( dstTexture );
+				if ( this.mode === 'partial_no_interim' ) {
+
+					this.switchWebGLTextures( dstTexture );
+
+				}
+
+				this.releaseTempProperties( dstTexture );
 				this.onTextureUpload( dstTexture );
 
 			}
@@ -363,14 +370,18 @@
 			var width = texture.image.width;
 			var height = texture.image.height;
 
-			delete texture.webglTexture;
-			delete texture.uploadedChunks;
-
 			renderer.properties.get( texture ).__webglTexture = newWebGLTexture;
 			renderer.properties.get( texture ).__maxMipLevel = needsMipmaps ? Math.log( Math.max( width, height ) ) * Math.LOG2E : 0;
 
 			var gl = this.renderer.context;
 			gl.deleteTexture( oldWebGLTexture );
+
+		},
+
+		releaseTempProperties: function ( texture ) {
+
+			delete texture.webglTexture;
+			delete texture.uploadedChunks;
 
 		},
 
@@ -498,6 +509,9 @@
 			var level = 0;
 			var needsMipmaps = this.needsMipmaps( texture );
 
+			texture.levelNums = 0;
+			texture.allocatedLevels = 0;
+
 			while ( true ) {
 
 				this.createQueue.push( {
@@ -507,6 +521,8 @@
 					width: width,
 					height: height
 				} );
+
+				texture.levelNums ++;
 
 				if ( ! needsMipmaps || ( width === 1 && height === 1 ) ) break;
 
@@ -539,6 +555,14 @@
 			gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.utils.convert( texture.minFilter ) );
 			gl.texImage2D( gl.TEXTURE_2D, level, glInternalFormat, width, height, 0, glFormat, glType, null );
 			gl.bindTexture( gl.TEXTURE_2D, null );
+
+			texture.allocatedLevels ++;
+
+			if ( this.mode === 'partial' && texture.allocatedLevels === texture.levelNums ) {
+
+				this.switchWebGLTextures( texture );
+
+			}
 
 		},
 
