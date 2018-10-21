@@ -69,7 +69,7 @@ function compressFromUrl( url, flags ) {
 
 	} ).then( function ( bitmap ) {
 
-		return compressImage( bitmap, flags );
+		return compressImageBitmap( bitmap, flags );
 
 	} );
 
