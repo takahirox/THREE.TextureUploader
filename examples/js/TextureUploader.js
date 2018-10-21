@@ -383,6 +383,8 @@
 			var entry = this.uploadQueue.shift();
 			var texture = entry.texture;
 			texture.needsUpdate = true;
+			texture.format = THREE.RGB_S3TC_DXT1_Format;
+			texture.minFilter = THREE.LinearFilter;
 			this.textureMap.delete( texture );
 			this.onTextureUpload( texture );
 
