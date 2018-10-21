@@ -19,7 +19,7 @@ Less-blocking Texture uploader for Three.js
 - [ImageBitmapLoader + One_by_one](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=one_by_one&imagebitmap=on&interval=30)
 - [ImageBitmapLoader + Partial](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial&imagebitmap=on&chunksize=512&interval=3)
 - [ImageBitmapLoader + Partial(No interim)](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial_no_interim&imagebitmap=on&chunksize=512&interval=3)
-- [Runtime DXT1 convertion](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=dxt1&imagebitmap=on&interval=10)
+- [Runtime DXT1 compression](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=dxt1&imagebitmap=on&interval=10)
 
 ### Large textures (five 4096x4096 jpg textures)
 
@@ -30,7 +30,7 @@ Less-blocking Texture uploader for Three.js
 - [ImageBitmapLoader + One_by_one](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=one_by_one&imagebitmap=on&interval=30&texture=large)
 - [ImageBitmapLoader + Partial](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial&imagebitmap=on&chunksize=512&interval=3&texture=large)
 - [ImageBitmapLoader + Partial(No interim)](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial_no_interim&imagebitmap=on&chunksize=512&interval=3&texture=large)
-- [Runtime DXT1 convertion](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=dxt1&imagebitmap=on&interval=10&texture=large)
+- [Runtime DXT1 compression](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=dxt1&imagebitmap=on&interval=10&texture=large)
 
 ### Huge textures (five 8192x8192 jpg textures)
 
@@ -41,7 +41,7 @@ Less-blocking Texture uploader for Three.js
 - [ImageBitmapLoader + One_by_one](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=one_by_one&imagebitmap=on&interval=30&texture=huge)
 - [ImageBitmapLoader + Partial](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial&imagebitmap=on&chunksize=512&interval=3&texture=huge)
 - [ImageBitmapLoader + Partial(No interim)](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial_no_interim&imagebitmap=on&chunksize=512&interval=3&texture=huge)
-- [Runtime DXT1 convertion](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=dxt1&imagebitmap=on&interval=10&texture=huge)
+- [Runtime DXT1 compression](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=dxt1&imagebitmap=on&interval=10&texture=huge)
 
 ### DDS textures (five 8192x8192 DXT1 textures)
 
