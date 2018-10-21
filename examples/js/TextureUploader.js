@@ -304,7 +304,7 @@
 			if ( ! this.textureMap.has( texture ) && texture.version === 0 ) {
 
 				console.warn( 'THREE.TextureUploader: Add texture after setting "texture.needsUpdate = true".', texture );
-				return;
+				return false;
 
 			}
 
