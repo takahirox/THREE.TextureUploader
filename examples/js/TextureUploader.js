@@ -22,14 +22,29 @@
 		this.capabilities = new WebGLCapabilities( gl );
 		this.utils = new THREE.WebGLUtils( gl, extensions, this.capabilities );
 
+		this.compressingTexture = null;
+
+		var self = this;
+
+		this.compressWorker = new Worker( './js/workers/compressor.js' );
+
+		this.compressWorker.addEventListener( 'message', function ( e ) {
+
+			self.receiveCompressedTexture( e.data.data );
+
+		} );
+
 	}
 
 	var COMMAND = {
 		ALLOCATE_MEMORY: 0,
-		CREATE_CHUNK: 1
+		CREATE_CHUNK: 1,
+		COMPRESSION: 2
 	};
 
 	TextureUploader.prototype = {
+
+		constructor: TextureUploader,
 
 		isTextureUploader: true,
 
@@ -55,9 +70,11 @@
 
 			}
 
-			if ( mode !== 'one_by_one' && mode !== 'at_the_same_time' && mode !== 'partial' && mode !== 'partial_no_interim' ) {
+			if ( mode !== 'one_by_one' && mode !== 'at_the_same_time' &&
+				mode !== 'partial' && mode !== 'partial_no_interim' &&
+				mode !== 'dxt1' ) {
 
-				console.warn( 'THREE.TextureUploader: mode must be one of one_by_one, at_the_same_time, partial, or partial_no_interim.' );
+				console.warn( 'THREE.TextureUploader: mode must be one of one_by_one, at_the_same_time, partial, partial_no_interim, or dxt1.' );
 				return this;
 
 			}
@@ -151,6 +168,7 @@
 					break;
 
 				case 'one_by_one':
+				case 'dxt1':
 				default:
 
 					this.uploadOne();
@@ -163,6 +181,8 @@
 		create: function () {
 
 			if ( this.createQueue.length === 0 ) return;
+
+			if ( this.mode === 'dxt1' && this.compressingTexture !== null ) return;
 
 			var entry = this.createQueue.shift();
 
@@ -193,12 +213,102 @@
 					);
 					break;
 
+				case COMMAND.COMPRESSION:
+
+					this.sendCompressingTexture(
+						entry.texture,
+						entry.material,
+						entry.key
+					);
+					break;
+
 				default:
 
 					console.error( 'THREE.TextureUploader: Unknown command: ' + entry.command );
 					break;
 
 			}
+
+		},
+
+		validTexture: function ( texture ) {
+
+			if ( this.mode === 'partial' || this.mode === 'partial_no_interim' || this.mode === 'dxt1' ) {
+
+				if ( texture.isCubeTexture === true ) {
+
+					console.warn( 'THREE.TextureUploader: ' + this.mode + ' mode does not support CubeTexture.', texture );
+					return false;
+
+				}
+
+				if ( texture.isCompressedTexture === true ) {
+
+					console.warn( 'THREE.TextureUploader: ' + this.mode + ' mode does not support CompressedTexture.', texture );
+					return false;
+
+				}
+
+				if ( texture.isDataTexture === true ) {
+
+					console.warn( 'THREE.TextureUploader: ' + this.mode + ' mode does not support DataTexture.', texture );
+					return false;
+
+				}
+
+				if ( texture.isDataTexture3D === true ) {
+
+					console.warn( 'THREE.TextureUploader: ' + this.mode + ' mode does not support DataTexture3D.', texture );
+					return false;
+
+				}
+
+				if ( texture.mipmaps.length > 0 ) {
+
+					console.warn( 'THREE.TextureUploader: ' + this.mode + ' mode does not support Texture whose .mipmaps.length > 0.', texture );
+					return false;
+
+				}
+
+				if ( texture.image === undefined || texture.image === null ) {
+
+					console.warn( 'THREE.TextureUploader: ' + this.mode + ' mode does not support Texture whose .image is not set.', texture );
+					return false;
+
+				}
+
+			}
+
+			if ( this.mode === 'partial' || this.mode === 'partial_no_interim' ) {
+
+				if ( ! this.isPowerOfTwoRect( texture.image.width, texture.image.height ) ) {
+
+					console.warn( 'THREE.TextureUploader: ' + this.mode + ' mode does not support Texture whose .image is not power-of-two.', texture );
+					return false;
+
+				}
+
+			}
+
+			if ( this.mode === 'dxt1' ) {
+
+				if ( ! ( texture.image instanceof ImageBitmap ) ) {
+
+					console.warn( 'THREE.TextureUploader: ' + this.mode + ' mode accepts only ImageBitmap.', texture );
+					return false;
+
+				}
+
+			}
+
+			if ( ! this.textureMap.has( texture ) && texture.version === 0 ) {
+
+				console.warn( 'THREE.TextureUploader: Add texture after setting "texture.needsUpdate = true".', texture );
+				return;
+
+			}
+
+			return true;
 
 		},
 
@@ -217,9 +327,17 @@
 				var element = material[ key ];
 
 				if ( element !== null && typeof element === 'object' &&
-					element.isTexture === true ) {
+					element.isTexture === true && this.validTexture( element ) ) {
 
-					this.addTexture( element );
+					if ( this.mode === 'dxt1' ) {
+
+						this.addCompressingTexture( element, material, key );
+
+					} else {
+
+						this.addTexture( element );
+
+					}
 
 				}
 
@@ -227,69 +345,9 @@
 
 		},
 
-		addTexture: function ( texture ) {
+		addTexture: function ( texture, material, key ) {
 
 			if ( this.textureMap.has( texture ) ) return;
-
-			if ( this.mode === 'partial' || this.mode === 'partial_no_interim' ) {
-
-				if ( texture.isCubeTexture === true ) {
-
-					console.warn( 'THREE.TextureUploader: partial mode does not support CubeTexture.', texture );
-					return;
-
-				}
-
-				if ( texture.isCompressedTexture === true ) {
-
-					console.warn( 'THREE.TextureUploader: partial mode does not support CompressedTexture.', texture );
-					return;
-
-				}
-
-				if ( texture.isDataTexture === true ) {
-
-					console.warn( 'THREE.TextureUploader: partial mode does not support DataTexture.', texture );
-					return;
-
-				}
-
-				if ( texture.isDataTexture3D === true ) {
-
-					console.warn( 'THREE.TextureUploader: partial mode does not support DataTexture3D.', texture );
-					return;
-
-				}
-
-				if ( texture.mipmaps.length > 0 ) {
-
-					console.warn( 'THREE.TextureUploader: partial mode does not support Texture whose .mipmaps.length > 0.', texture );
-					return;
-
-				}
-
-				if ( texture.image === undefined || texture.image === null ) {
-
-					console.warn( 'THREE.TextureUploader: partial mode does not support Texture whose .image is not set.', texture );
-					return;
-
-				}
-
-				if ( ! this.isPowerOfTwoRect( texture.image.width, texture.image.height ) ) {
-
-					console.warn( 'THREE.TextureUploader: partial mode does not support Texture whose .image is not power-of-two.', texture );
-					return;
-
-				}
-
-			}
-
-			if ( texture.version === 0 ) {
-
-				console.warn( 'THREE.TextureUploader: Add texture after running "texture.needsUpdate = true".', texture );
-				return;
-
-			}
 
 			this.textureMap.set( texture, true );
 
@@ -567,6 +625,70 @@
 				this.switchWebGLTextures( texture );
 
 			}
+
+		},
+
+		addCompressingTexture: function ( texture, material, key ) {
+
+			var compressedTexture;
+
+			if ( this.textureMap.has( texture ) ) {
+
+				compressedTexture = this.textureMap.get( texture );
+
+			} else {
+
+				texture.version --;
+
+				this.createQueue.push( {
+					command: COMMAND.COMPRESSION,
+					texture: texture,
+					material: material,
+					key: key
+				} );
+
+				compressedTexture = new THREE.CompressedTexture().copy( texture );
+				this.textureMap.set( texture, compressedTexture );
+
+			}
+
+			material[ key ] = compressedTexture;
+
+		},
+
+		sendCompressingTexture: function ( texture, material, key ) {
+
+			this.compressingTexture = texture;
+
+			this.compressWorker.postMessage( {
+				arg: texture.image
+			}, [ texture.image ] );
+
+		},
+
+		receiveCompressedTexture: function ( data ) {
+
+			var texture = this.textureMap.get( this.compressingTexture );
+			this.textureMap.delete( this.compressingTexture );
+			this.compressingTexture = null;
+
+			texture.image = [];
+			texture.image.width = data.width;
+			texture.image.height = data.height;
+
+			texture.mipmaps = [];
+			texture.mipmaps.push( {
+				data: data.array,
+				width: data.width,
+				height: data.height
+			} );
+
+			texture.format = THREE.RGB_S3TC_DXT1_Format;
+			texture.minFilter = THREE.LinearFilter;
+
+			this.uploadQueue.push( {
+				texture: texture
+			} );
 
 		},
 
