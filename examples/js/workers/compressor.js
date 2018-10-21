@@ -29,23 +29,31 @@ function onCompressDone( data ) {
 
 function compress( arg, flags ) {
 
+	var pending;
+
 	if ( typeof arg === 'string' ) {
 
-		return compressFromUrl( arg, flags );
+		pending = compressFromUrl( arg, flags );
+
+	} else if ( arg instanceof ImageBitmap ) {
+
+		pending = compressImageBitmap( arg, flags );
+
+	} else if ( arg instanceof ImageData ) {
+
+		pending = compressImageData( arg, flags );
+
+	} else {
+
+		pending = Promise.resolve( {} );
 
 	}
 
-	if ( arg instanceof ImageBitmap ) {
+	pending.then( function ( result ) {
 
-		return compressImageBitmap( arg, flags );
+		onCompressDone( result );
 
-	}
-
-	if ( arg instanceof ImageData ) {
-
-		return compressImageData( arg, flags );
-
-	}
+	} );
 
 }
 
@@ -101,7 +109,7 @@ function compressImageData( imageData, flags ) {
 	Module._free( distPointer );
 	Module._free( sourcePointer );
 
-	onCompressDone( {
+	return Promise.resolve( {
 		array: outputData,
 		width: width,
 		height: height
