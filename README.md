@@ -40,6 +40,11 @@ Less-blocking Texture uploader for Three.js
 - [ImageBitmapLoader + Partial](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial&imagebitmap=on&chunksize=512&interval=3&texture=huge)
 - [ImageBitmapLoader + Partial(No interim)](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=partial_no_interim&imagebitmap=on&chunksize=512&interval=3&texture=huge)
 
+### DdS textures (five 8192x8192 DXT1 textures)
+
+- [Original for comparison](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=at_the_same_time&texture=dds)
+- [One_by_one](https://raw.githack.com/takahirox/THREE.TextureUploader/master/examples/webgl_texture_uploader.html?mode=one_by_one&interval=30&texture=dds)
+
 ## How to use
 
 ```html
